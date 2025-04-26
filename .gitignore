@@ -1,0 +1,8 @@
+node_modules
+build
+frontend/build
+.bash_history
+*.log
+.env
+chat.db
+*.sqlite

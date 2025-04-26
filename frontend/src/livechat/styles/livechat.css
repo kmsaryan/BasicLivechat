@@ -1,0 +1,86 @@
+/* Base CSS variables for theming */
+:root {
+  --livechat-primary-color: #007bff;
+  --livechat-secondary-color: #f8f9fa;
+  --livechat-text-color: #212529;
+  --livechat-text-inverse-color: #ffffff;
+  --livechat-border-color: #dee2e6;
+  --livechat-background-color: #f4f4f4;
+  --livechat-bubble-own-color: #007bff;
+  --livechat-bubble-other-color: #f1f1f1;
+  --livechat-border-radius: 5px;
+  --livechat-padding: 10px;
+  --livechat-font-size: 14px;
+  --livechat-header-font-size: 16px;
+}
+
+/* Component styles using the variables */
+.livechat-container {
+  font-family: Arial, sans-serif;
+  font-size: var(--livechat-font-size);
+  color: var(--livechat-text-color);
+  background-color: var(--livechat-background-color);
+}
+
+.livechat-window {
+  width: 400px;
+  margin: 50px auto;
+  background: var(--livechat-secondary-color);
+  border: 1px solid var(--livechat-border-color);
+  border-radius: var(--livechat-border-radius);
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.livechat-header {
+  background: var(--livechat-primary-color);
+  color: var(--livechat-text-inverse-color);
+  padding: var(--livechat-padding);
+  text-align: center;
+  font-size: var(--livechat-header-font-size);
+}
+
+.livechat-history {
+  height: 300px;
+  overflow-y: auto;
+  padding: var(--livechat-padding);
+  border-bottom: 1px solid var(--livechat-border-color);
+}
+
+.livechat-input-section {
+  display: flex;
+  padding: var(--livechat-padding);
+}
+
+.livechat-input-field {
+  flex: 1;
+  padding: 5px;
+  border: 1px solid var(--livechat-border-color);
+  border-radius: var(--livechat-border-radius);
+}
+
+.livechat-send-button {
+  background: var(--livechat-primary-color);
+  color: var(--livechat-text-inverse-color);
+  border: none;
+  padding: 5px 10px;
+  margin-left: 5px;
+  border-radius: var(--livechat-border-radius);
+  cursor: pointer;
+}
+
+.livechat-message-bubble {
+  margin-bottom: 10px;
+  padding: var(--livechat-padding);
+  border-radius: var(--livechat-border-radius);
+  background: var(--livechat-bubble-other-color);
+  max-width: 70%;
+}
+
+.livechat-message-bubble.own {
+  background: var(--livechat-bubble-own-color);
+  color: var(--livechat-text-inverse-color);
+  margin-left: auto;
+}
+
+/* Additional styles for other components... */
