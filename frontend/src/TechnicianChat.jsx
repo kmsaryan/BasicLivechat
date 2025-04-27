@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ChatHistory from './components/ChatHistory';
 import InputField from './components/InputField';
 import SendButton from './components/SendButton';
+import FileUpload from './components/FileUpload'; // Import the FileUpload component
 import { io } from 'socket.io-client';
 
 const socket = io(`http://localhost:${process.env.REACT_APP_BACKEND_PORT || 5000}`);
@@ -75,6 +76,23 @@ const TechnicianChat = () => {
         setInputValue('');
     };
 
+    const handleFileUpload = (file) => {
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = () => {
+            const fileData = {
+                name: file.name,
+                type: file.type,
+                content: reader.result,
+                sender: role, // Add sender information
+            };
+            // Fixed: Use fileData parameter name instead of message
+            socket.emit('file-upload', { roomId, fileData });
+        };
+        reader.readAsDataURL(file);
+    };
+
     return (
         <div className="chat-window">
             <header className="chat-header">Technician Chat</header>
@@ -82,6 +100,7 @@ const TechnicianChat = () => {
             <div className="chat-input-section">
                 <InputField value={inputValue} onChange={setInputValue} />
                 <SendButton onClick={handleSendMessage} />
+                <FileUpload onFileUpload={handleFileUpload} />
             </div>
         </div>
     );

@@ -4,14 +4,17 @@ import MessageBubble from './MessageBubble';
 const ChatHistory = ({ messages, typingIndicator }) => {
     return (
         <div className="chat-history">
-            {messages.map((msg, index) => (
-                <MessageBubble
-                    key={`${msg.id}-${msg.timestamp}-${index}`} // Ensure a globally unique key
-                    message={msg}
-                    isOwnMessage={msg.isOwn}
-                    isRead={true}
-                />
-            ))}
+            <div className="messages-container">
+                {messages.map((msg, index) => (
+                    <MessageBubble
+                        key={`${msg.id}-${msg.timestamp}-${index}`}
+                        message={msg}
+                        isOwnMessage={msg.isOwn}
+                        isRead={true}
+                    />
+                ))}
+            </div>
+            
             {typingIndicator && (
                 <div className="typing-indicator">
                     <span>...</span>

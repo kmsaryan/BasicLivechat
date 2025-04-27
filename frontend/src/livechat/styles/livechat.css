@@ -69,6 +69,58 @@
   cursor: pointer;
 }
 
+/* Message container for proper alignment */
+.livechat-message-container {
+  display: flex;
+  width: 100%;
+  margin-bottom: 12px;
+  clear: both;
+}
+
+.livechat-own-message-container {
+  justify-content: flex-end;
+}
+
+.livechat-other-message-container {
+  justify-content: flex-start;
+}
+
+.livechat-messages-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Update message bubble styling */
+.livechat-message-bubble {
+  padding: 10px 15px;
+  border-radius: var(--livechat-border-radius);
+  background: var(--livechat-bubble-other-color);
+  max-width: 80%;
+  word-wrap: break-word;
+  display: inline-block;
+}
+
+.livechat-message-bubble.own {
+  background: var(--livechat-bubble-own-color);
+  color: var(--livechat-text-inverse-color);
+}
+
+/* Image styling for the bubbles */
+.livechat-message-image-container {
+  position: relative;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.livechat-message-image {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: var(--livechat-border-radius);
+  display: block;
+  margin: 0 auto;
+}
+
 .livechat-message-bubble {
   margin-bottom: 10px;
   padding: var(--livechat-padding);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ChatHistory from './ChatHistory';
 import InputField from './InputField';
 import SendButton from './SendButton';
+import FileUpload from './FileUpload';
 import SuggestionsSection from './SuggestionsSection';
 import { io } from 'socket.io-client';
 
@@ -76,21 +77,20 @@ const ChatWindow = () => {
         setInputValue('');
     };
 
-    const handleFileUpload = (event) => {
-        const uploadedFile = event.target.files[0];
-        if (!uploadedFile) return;
+    const handleFileUpload = (file) => {
+        if (!file) return;
         
         const reader = new FileReader();
         reader.onload = () => {
             const fileData = {
-                name: uploadedFile.name,
-                type: uploadedFile.type,
+                name: file.name,
+                type: file.type,
                 content: reader.result,
                 sender: role, // Add sender information
             };
             socket.emit('file-upload', { roomId, fileData });
         };
-        reader.readAsDataURL(uploadedFile);
+        reader.readAsDataURL(file);
     };
 
     return (
@@ -100,7 +100,7 @@ const ChatWindow = () => {
             <div className="chat-input-section">
                 <InputField value={inputValue} onChange={setInputValue} />
                 <SendButton onClick={handleSendMessage} />
-                <input type="file" onChange={handleFileUpload} />
+                <FileUpload onFileUpload={handleFileUpload} />
             </div>
             <SuggestionsSection />
         </div>

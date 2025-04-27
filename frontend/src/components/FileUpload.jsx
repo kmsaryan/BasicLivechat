@@ -1,0 +1,26 @@
+import React from 'react';
+
+const FileUpload = ({ onFileUpload, accept = "*" }) => {
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file && onFileUpload) {
+      onFileUpload(file);
+    }
+  };
+
+  return (
+    <div className="file-upload">
+      <label className="file-upload-label">
+        <input
+          type="file"
+          className="file-input"
+          onChange={handleFileChange}
+          accept={accept}
+        />
+        <span className="file-button">📎</span>
+      </label>
+    </div>
+  );
+};
+
+export default FileUpload;
