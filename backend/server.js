@@ -230,6 +230,45 @@ io.on('connection', (socket) => {
         });
     });
 
+    // Handle video call requests
+    socket.on('video-call-request', ({ chatId, caller }) => {
+        console.log(`Video call requested by ${caller} in chat ${chatId}`);
+        io.to(chatId).emit('video-call-request', { caller, chatId });
+    });
+
+    // Handle video call acceptance
+    socket.on('video-call-accepted', ({ caller, roomId }) => {
+        console.log(`Video call accepted in room ${roomId}`);
+        io.to(roomId).emit('start-call', { isCaller: socket.id === caller });
+    });
+
+    // Handle video call decline
+    socket.on('video-call-declined', ({ caller, roomId }) => {
+        console.log(`Video call declined in room ${roomId}`);
+        io.to(roomId).emit('call-declined');
+    });
+
+    // Handle end call
+    socket.on('end-call', ({ roomId }) => {
+        console.log(`Call ended in room ${roomId}`);
+        io.to(roomId).emit('call-ended');
+    });
+
+    socket.on('ice-candidate', ({ candidate, roomId }) => {
+        console.log(`ICE candidate received for room ${roomId}`);
+        socket.to(roomId).emit('ice-candidate', { candidate });
+    });
+
+    socket.on('offer', ({ offer, roomId }) => {
+        console.log(`Offer received for room ${roomId}`);
+        socket.to(roomId).emit('offer', { offer });
+    });
+
+    socket.on('answer', ({ answer, roomId }) => {
+        console.log(`Answer received for room ${roomId}`);
+        socket.to(roomId).emit('answer', { answer });
+    });
+
     // Handle disconnection
     socket.on('disconnect', () => {
         console.log('A user disconnected:', socket.id);

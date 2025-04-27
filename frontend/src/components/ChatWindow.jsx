@@ -8,6 +8,7 @@ import SuggestionsSection from './SuggestionsSection';
 import EndChatButton from './EndChatButton';
 import VideoCallButton from './VideoCallButton';
 import QueueSelector from './QueueSelector';
+import VideoCall from './VideoCall'; // Import the VideoCall component
 import { io } from 'socket.io-client';
 
 const socket = io(`http://localhost:${process.env.REACT_APP_BACKEND_PORT || 5000}`);
@@ -25,6 +26,7 @@ const ChatWindow = ({ customStyles = {}, customLayout = null }) => {
     const [inVideoCall, setInVideoCall] = useState(false);
     const [currentChatId, setCurrentChatId] = useState('chat-room'); // Track the current chat room ID
     const [userName, setUserName] = useState(''); // Add state for user name
+    const [isVideoCallActive, setIsVideoCallActive] = useState(false); // Track video call state
     const role = 'customer'; // Role of this user
 
     // Define supportCategories directly in this component
@@ -113,9 +115,25 @@ const ChatWindow = ({ customStyles = {}, customLayout = null }) => {
 
         // Listen for video call requests
         socket.on('video-call-request', ({ caller }) => {
-            // Show video call UI or notification here
+            console.log(`Incoming video call from ${caller}`);
             setShowVideoCallPrompt(true);
             setVideoCallerId(caller);
+        });
+
+        // Listen for video call start
+        socket.on('start-call', ({ isCaller }) => {
+            console.log('Video call started');
+            setInVideoCall(true);
+            setShowVideoCallPrompt(false); // Hide the prompt
+            setVideoCallerId(null); // Reset caller ID
+        });
+
+        // Listen for video call end
+        socket.on('call-ended', () => {
+            console.log('Video call ended');
+            setInVideoCall(false);
+            setShowVideoCallPrompt(false);
+            setVideoCallerId(null); // Reset caller ID
         });
 
         return () => {
@@ -125,8 +143,10 @@ const ChatWindow = ({ customStyles = {}, customLayout = null }) => {
             socket.off('chat-accepted');
             socket.off('chat-ended');
             socket.off('video-call-request');
+            socket.off('start-call');
+            socket.off('call-ended');
         };
-    }, []);
+    }, [currentChatId]);
 
     const handleSendMessage = () => {
         if (!inputValue.trim()) return;
@@ -215,28 +235,30 @@ const ChatWindow = ({ customStyles = {}, customLayout = null }) => {
     };
 
     const handleStartVideoCall = () => {
-        // Logic to start a video call
+        setIsVideoCallActive(true); // Activate video call
         socket.emit('video-call-request', {
             chatId: currentChatId,
             caller: userId
         });
     };
 
+    const handleEndVideoCall = () => {
+        setIsVideoCallActive(false); // Deactivate video call
+        socket.emit('end-call', { roomId: currentChatId });
+    };
+
     const handleAcceptVideoCall = () => {
-        // Logic to accept and start video call
+        console.log('Accepting video call');
+        socket.emit('video-call-accepted', { caller: videoCallerId, roomId: currentChatId });
         setInVideoCall(true);
-        socket.emit('video-call-accepted', { 
-            caller: videoCallerId,
-            roomId: currentChatId
-        });
+        setShowVideoCallPrompt(false);
     };
 
     const handleDeclineVideoCall = () => {
+        console.log('Declining video call');
+        socket.emit('video-call-declined', { caller: videoCallerId, roomId: currentChatId });
         setShowVideoCallPrompt(false);
-        socket.emit('video-call-declined', {
-            caller: videoCallerId,
-            roomId: currentChatId
-        });
+        setVideoCallerId(null); // Reset caller ID after declining
     };
 
     const handleSuggestionClick = (suggestion) => {
@@ -302,7 +324,15 @@ const ChatWindow = ({ customStyles = {}, customLayout = null }) => {
                         )}
                     </header>
                     
-                    {renderContent()}
+                    {isVideoCallActive ? (
+                        <VideoCall 
+                            roomId={currentChatId} 
+                            socket={socket} 
+                            onEndCall={handleEndVideoCall} 
+                        />
+                    ) : (
+                        renderContent()
+                    )}
                     
                     {showVideoCallPrompt && (
                         <div className="video-call-prompt">
