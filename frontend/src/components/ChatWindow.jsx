@@ -152,9 +152,11 @@ const ChatWindow = ({ customStyles = {}, customLayout = null }) => {
                 name: file.name,
                 type: file.type,
                 content: reader.result,
-                sender: role, // Add sender information
+                sender: role,
             };
-            // Use the current chat ID when uploading files
+            
+            // No need to manually add to messages since the server will echo it back
+            // with the correct structure via the 'file-received' event
             socket.emit('file-upload', { roomId: currentChatId, fileData });
         };
         reader.readAsDataURL(file);

@@ -17,4 +17,13 @@
     font-weight: 600;
 }
 
+.chat-input-section {
+    display: flex;
+    padding: 15px;
+    background-color: white;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid #eee;
+}
+
 /* Add your ChatWindow-specific styles here */

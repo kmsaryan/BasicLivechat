@@ -6,4 +6,6 @@
     margin-left: 5px;
     border-radius: 3px;
     cursor: pointer;
+    transition: background 0.3s;
 }
+

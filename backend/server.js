@@ -196,8 +196,8 @@ io.on('connection', (socket) => {
         
         console.log(`File uploaded in room ${roomId}:`, fileDataWithSender);
         
-        // Broadcast the file to everyone in the room except the sender
-        socket.to(roomId).emit('file-received', fileDataWithSender);
+        // Broadcast the file to EVERYONE in the room INCLUDING the sender
+        io.to(roomId).emit('file-received', fileDataWithSender);
     });
 
     // Handle end chat

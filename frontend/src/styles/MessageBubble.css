@@ -5,6 +5,14 @@
     clear: both;
 }
 
+.own-message-container {
+    justify-content: flex-end;
+}
+
+.other-message-container {
+    justify-content: flex-start;
+}
+
 .message-bubble {
     padding: 10px 15px;
     border-radius: 18px;
@@ -20,4 +28,79 @@
     color: #fff;
 }
 
-/* Add other styles specific to MessageBubble */
+.message-bubble.system {
+    background-color: #ffdc89;
+    color: #856404;
+    max-width: 100%;
+    text-align: center;
+    margin: 10px auto;
+}
+
+.message-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.message-meta {
+    font-size: 0.75em;
+    color: #888;
+    text-align: right;
+    margin-top: 4px;
+    clear: both;
+}
+
+.message-bubble.own .message-meta {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Image message styles */
+.message-image-container {
+    position: relative;
+    cursor: pointer;
+    max-width: 100%;
+}
+
+.message-image {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Make sure images are visible in both sender and receiver bubbles */
+.message-bubble .message-image {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Ensure sender's images have proper contrast against blue background */
+.message-bubble.own .message-image {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* File message styles */
+.file-message {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 8px;
+    margin: 0;
+}
+
+.download-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+    margin-top: 5px;
+}
+
+/* Fix contrast for sender's download link on blue background */
+.message-bubble.own .download-link {
+    color: white;
+    font-weight: bold;
+}

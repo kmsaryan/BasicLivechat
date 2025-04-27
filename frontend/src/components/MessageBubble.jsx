@@ -3,17 +3,17 @@ import '../styles/MessageBubble.css';
 
 const MessageBubble = ({ message, isOwnMessage }) => {
     const [showFullImage, setShowFullImage] = useState(false);
-    
-    // Improve image detection for both sender and receiver
+
+    // Improved image detection for both sender and receiver
     const isImage = message.file && (
         (message.file.type && message.file.type.startsWith('image/')) || 
         (message.file.content && message.file.content.startsWith('data:image/'))
     );
-    
+
     const handleImageClick = () => {
         setShowFullImage(!showFullImage);
     };
-    
+
     const handleDownload = (e) => {
         e.stopPropagation(); // Prevent triggering the image click
     };

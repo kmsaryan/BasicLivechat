@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import ChatHistory from './components/ChatHistory';
-import InputField from './components/InputField';
-import SendButton from './components/SendButton';
-import FileUpload from './components/FileUpload';
-import EndChatButton from './components/EndChatButton';
-import TechnicianSidebar from './components/TechnicianSidebar';
-import VideoCallButton from './components/VideoCallButton';
+import ChatHistory from '../components/ChatHistory';
+import InputField from '../components/InputField';
+import SendButton from '../components/SendButton';
+import FileUpload from '../components/FileUpload';
+import EndChatButton from '../components/EndChatButton';
+import TechnicianSidebar from '../components/TechnicianSidebar';
+import VideoCallButton from '../components/VideoCallButton';
+import '../styles/Technician.css'; // Updated import
+
 import { io } from 'socket.io-client';
 
 const socket = io(`http://localhost:${process.env.REACT_APP_BACKEND_PORT || 5000}`);

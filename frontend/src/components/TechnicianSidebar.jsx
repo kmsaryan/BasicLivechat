@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/TechnicianSidebar.css';
+import '../styles/Technician.css';
 
 const TechnicianSidebar = ({ activeChats = [], currentChatId, queue = {}, onSelectChat }) => {
   // Helper function to count total queue items
