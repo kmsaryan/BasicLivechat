@@ -1,26 +1,16 @@
-import React, { useState } from 'react';
-import ChatWindow from './components/ChatWindow';
-import TechnicianChat from './TechnicianChat';
-import TechnicianConnect from './components/TechnicianConnect';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import UserPage from './pages/UserPage';
+import TechnicianPage from './pages/TechnicianPage';
 
 const App = () => {
-    const [isTechnician, setIsTechnician] = useState(false);
-
-    const handleConnect = () => {
-        setIsTechnician(true);
-    };
-
     return (
-        <div className="app">
-            {isTechnician ? (
-                <TechnicianChat />
-            ) : (
-                <>
-                    <ChatWindow />
-                    <TechnicianConnect onConnect={handleConnect} />
-                </>
-            )}
-        </div>
+        <Router>
+            <Routes>
+                <Route path="/" element={<UserPage />} />
+                <Route path="/technician" element={<TechnicianPage />} />
+            </Routes>
+        </Router>
     );
 };
 

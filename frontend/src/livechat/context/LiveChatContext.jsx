@@ -5,12 +5,28 @@ const LiveChatContext = createContext();
 export const LiveChatProvider = ({ children, initialTechnician = false }) => {
   const [isTechnician, setIsTechnician] = useState(initialTechnician);
   const [messages, setMessages] = useState([]);
+  const [activeChats, setActiveChats] = useState([]);
+  const [currentChatId, setCurrentChatId] = useState(null);
+  const [queue, setQueue] = useState([]);
+  const [supportCategories, setSupportCategories] = useState([
+    { id: "tech", name: "Technical Support" },
+    { id: "billing", name: "Billing Questions" },
+    { id: "general", name: "General Inquiry" },
+  ]);
   
   const value = {
     isTechnician,
     setIsTechnician,
     messages,
-    setMessages
+    setMessages,
+    activeChats,
+    setActiveChats,
+    currentChatId, 
+    setCurrentChatId,
+    queue,
+    setQueue,
+    supportCategories,
+    setSupportCategories
   };
 
   return (
