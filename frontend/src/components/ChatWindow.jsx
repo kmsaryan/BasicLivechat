@@ -97,16 +97,12 @@ const ChatWindow = () => {
 
         // Listen for chat ended events
         socket.on('chat-ended', ({ endedBy }) => {
+            console.log(`Chat ended by ${endedBy}`);
             setChatStarted(false);
-            setMessages(prev => [
-                ...prev,
-                {
-                    id: `system-${Date.now()}`,
-                    text: `Chat ended by ${endedBy}`,
-                    isSystem: true,
-                    timestamp: new Date().toLocaleTimeString()
-                }
-            ]);
+            setMessages([]); // Clear messages
+            setInQueue(false); // Reset queue state
+            setQueuePosition(null); // Reset queue position
+            setQueueCategory(null); // Reset queue category
         });
 
         // Listen for video call requests

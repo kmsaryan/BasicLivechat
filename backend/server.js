@@ -179,6 +179,32 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Handle end chat
+    socket.on('end-chat', ({ chatId, endedBy }) => {
+        console.log(`Ending chat session in room ${chatId} by ${endedBy}`);
+        
+        // Broadcast the end-chat event to all participants in the room
+        io.to(chatId).emit('chat-ended', { chatId, endedBy });
+        
+        // Leave the room for all participants
+        const socketsInRoom = io.sockets.adapter.rooms.get(chatId);
+        if (socketsInRoom) {
+            socketsInRoom.forEach((socketId) => {
+                const socketInstance = io.sockets.sockets.get(socketId);
+                if (socketInstance) {
+                    socketInstance.leave(chatId);
+                }
+            });
+        }
+
+        // Reset the user's session
+        Object.keys(users).forEach((socketId) => {
+            if (users[socketId] === chatId) {
+                delete users[socketId];
+            }
+        });
+    });
+
     // Handle disconnection
     socket.on('disconnect', () => {
         console.log('A user disconnected:', socket.id);

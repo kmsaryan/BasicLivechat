@@ -96,7 +96,8 @@ const TechnicianChat = () => {
 
         // Listen for chat ended events
         socket.on('chat-ended', ({ chatId, endedBy }) => {
-            setActiveChats(prev => prev.filter(chat => chat.chatId !== chatId));
+            console.log(`Chat ${chatId} ended by ${endedBy}`);
+            setActiveChats((prev) => prev.filter((chat) => chat.chatId !== chatId));
             
             if (currentChatId === chatId) {
                 setCurrentChatId(null);
