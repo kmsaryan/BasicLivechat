@@ -57,6 +57,8 @@ const chatQueue = {
 // Pass queue reference to admin routes
 setQueueReference(chatQueue);
 
+let chatRooms = {}; // Store chat room associations
+
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
 
@@ -76,34 +78,10 @@ io.on('connection', (socket) => {
         console.log(`Socket ${socket.id} joined room ${roomId}`);
     });
 
-    // Handle messages
-    socket.on('message', ({ roomId, message }) => {
-        // Ensure the sender is correctly set
-        const sender = users[socket.id] || message.sender;
-        const messageWithSender = {
-            ...message,
-            sender, // Make sure sender is included
-        };
-        
-        console.log(`Message received in room ${roomId}:`, messageWithSender);
-        
-        // Broadcast the message to everyone in the room, including the sender
-        io.to(roomId).emit('message', messageWithSender);
-    });
-
-    // Handle file uploads
-    socket.on('file-upload', ({ roomId, fileData }) => {
-        // Ensure the sender is correctly set
-        const sender = users[socket.id] || fileData.sender;
-        const fileDataWithSender = {
-            ...fileData,
-            sender, // Make sure sender is included
-        };
-        
-        console.log(`File uploaded in room ${roomId}:`, fileDataWithSender);
-        
-        // Broadcast the file to everyone in the room except the sender
-        socket.to(roomId).emit('file-received', fileDataWithSender);
+    // Add this new event handler for leaving a room
+    socket.on('leave-room', (roomId) => {
+        socket.leave(roomId);
+        console.log(`Socket ${socket.id} left room ${roomId}`);
     });
 
     // Add to queue when customer selects support category
@@ -129,7 +107,12 @@ io.on('connection', (socket) => {
         
         console.log(`Queue updated: ${category} now has ${chatQueue[category].length} users`);
         
-        // CHANGE: Use io.to instead of socket.broadcast.to to ensure all technicians get the update
+        // Assign a dedicated room for the user
+        const userRoomId = `room-${userId}`;
+        socket.join(userRoomId); // User joins their dedicated room
+        console.log(`User ${userId} joined their dedicated room: ${userRoomId}`);
+        
+        // Use io.to instead of socket.broadcast.to to ensure all technicians get the update
         io.to('technicians').emit('queue-update', chatQueue);
         
         // Notify user about their position in queue
@@ -146,30 +129,36 @@ io.on('connection', (socket) => {
         
         if (userIndex >= 0) {
             const user = chatQueue[category][userIndex];
-            
+            const userRoomId = `room-${user.userId}`; // Dedicated room for the user
+
             // Remove from queue
             chatQueue[category].splice(userIndex, 1);
             
             console.log(`Removed user ${userId} from ${category} queue`);
             
-            // Create a unique room for this chat
-            const chatRoomId = `chat-${userId}-${technicianId}`;
+            // Technician joins the user's dedicated room
+            socket.join(userRoomId);
+            console.log(`Technician ${technicianId} joined room: ${userRoomId}`);
             
-            // Send chat accepted to both technician and user
+            // Notify both parties about the chat room
             socket.emit('chat-accepted', { 
-                chatRoomId, 
+                chatRoomId: userRoomId, 
                 user // Send full user details
             });
             
             io.to(user.socketId).emit('chat-accepted', { 
-                chatRoomId, 
+                chatRoomId: userRoomId, 
                 technicianId,
                 technicianName: users[socket.id] || "Support Agent"
             });
             
-            // Join both to the new room
-            socket.join(chatRoomId);
-            io.to(user.socketId).emit('join-room', chatRoomId);
+            // Store the room association for this chat
+            chatRooms = chatRooms || {};
+            chatRooms[userRoomId] = {
+                technicianId,
+                userId,
+                createdAt: new Date()
+            };
             
             // Update queue for all technicians
             io.to('technicians').emit('queue-update', chatQueue);
@@ -177,6 +166,38 @@ io.on('connection', (socket) => {
             console.log(`User ${userId} not found in ${category} queue`);
             socket.emit('error', { message: `User not found in queue` });
         }
+    });
+
+    // Handle messages
+    socket.on('message', ({ roomId, message }) => {
+        // Ensure the sender is correctly set
+        const sender = users[socket.id] || message.sender;
+        const messageWithSender = {
+            ...message,
+            sender, // Make sure sender is included
+            roomId  // Include the room ID with the message
+        };
+        
+        console.log(`Message received in room ${roomId}:`, messageWithSender);
+        
+        // Broadcast the message to the specific room
+        io.to(roomId).emit('message', messageWithSender);
+    });
+
+    // Handle file uploads
+    socket.on('file-upload', ({ roomId, fileData }) => {
+        // Ensure the sender is correctly set
+        const sender = users[socket.id] || fileData.sender;
+        const fileDataWithSender = {
+            ...fileData,
+            sender, // Make sure sender is included
+            roomId  // Include the room ID with the file data
+        };
+        
+        console.log(`File uploaded in room ${roomId}:`, fileDataWithSender);
+        
+        // Broadcast the file to everyone in the room except the sender
+        socket.to(roomId).emit('file-received', fileDataWithSender);
     });
 
     // Handle end chat
@@ -195,6 +216,11 @@ io.on('connection', (socket) => {
                     socketInstance.leave(chatId);
                 }
             });
+        }
+
+        // Clear the room association
+        if (chatRooms && chatRooms[chatId]) {
+            delete chatRooms[chatId];
         }
 
         // Reset the user's session

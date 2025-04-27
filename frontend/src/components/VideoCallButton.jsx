@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../styles/VideoCallButton.css';
 
 const VideoCallButton = ({ onClick, isActive = false }) => {
     const [isHovered, setIsHovered] = useState(false);

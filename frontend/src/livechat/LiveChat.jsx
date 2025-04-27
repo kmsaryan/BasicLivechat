@@ -3,7 +3,7 @@ import ChatWindow from './components/ChatWindow';
 import TechnicianChat from './components/TechnicianChat';
 import TechnicianConnect from './components/TechnicianConnect';
 import { useLiveChat } from './context/LiveChatContext';
-import './styles/livechat.css';
+import '../styles/livechat.css';
 
 const LiveChat = ({ 
   theme = {}, 

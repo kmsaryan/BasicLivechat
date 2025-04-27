@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../styles/EndChatButton.css';
 
 const EndChatButton = ({ onEndChat }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);

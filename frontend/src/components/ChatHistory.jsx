@@ -1,4 +1,5 @@
 import React from 'react';
+import '../styles/ChatHistory.css';
 import MessageBubble from './MessageBubble';
 
 const ChatHistory = ({ messages, typingIndicator }) => {

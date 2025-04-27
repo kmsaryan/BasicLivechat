@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import '../styles/ChatWindow.css';
 import ChatHistory from './ChatHistory';
 import InputField from './InputField';
 import SendButton from './SendButton';
@@ -11,7 +12,7 @@ import { io } from 'socket.io-client';
 
 const socket = io(`http://localhost:${process.env.REACT_APP_BACKEND_PORT || 5000}`);
 
-const ChatWindow = () => {
+const ChatWindow = ({ customStyles = {}, customLayout = null }) => {
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [chatStarted, setChatStarted] = useState(false);
@@ -22,7 +23,8 @@ const ChatWindow = () => {
     const [showVideoCallPrompt, setShowVideoCallPrompt] = useState(false);
     const [videoCallerId, setVideoCallerId] = useState(null);
     const [inVideoCall, setInVideoCall] = useState(false);
-    const roomId = 'chat-room'; // Shared room ID
+    const [currentChatId, setCurrentChatId] = useState('chat-room'); // Track the current chat room ID
+    const [userName, setUserName] = useState(''); // Add state for user name
     const role = 'customer'; // Role of this user
 
     // Define supportCategories directly in this component
@@ -35,7 +37,7 @@ const ChatWindow = () => {
     useEffect(() => {
         // Set role and join room on component mount
         socket.emit('set-role', { role });
-        socket.emit('join-room', roomId);
+        socket.emit('join-room', currentChatId);
 
         // Listen for incoming messages
         socket.on('message', (msg) => {
@@ -81,6 +83,9 @@ const ChatWindow = () => {
         socket.on('chat-accepted', ({ chatRoomId, technicianId, technicianName }) => {
             setInQueue(false);
             setChatStarted(true);
+            // Update the current chat ID to the dedicated room
+            setCurrentChatId(chatRoomId);
+
             setMessages(prev => [
                 ...prev,
                 {
@@ -103,6 +108,7 @@ const ChatWindow = () => {
             setInQueue(false); // Reset queue state
             setQueuePosition(null); // Reset queue position
             setQueueCategory(null); // Reset queue category
+            setCurrentChatId('chat-room'); // Reset to default room
         });
 
         // Listen for video call requests
@@ -132,9 +138,8 @@ const ChatWindow = () => {
             sender: role, // Include sender role directly in message
         };
         
-        // Only emit the message, don't update state directly
-        // This prevents duplicates as our socket listener will handle all messages
-        socket.emit('message', { roomId, message: newMessage });
+        // Send the message to the user's dedicated room
+        socket.emit('message', { roomId: currentChatId, message: newMessage });
         setInputValue('');
     };
 
@@ -149,13 +154,17 @@ const ChatWindow = () => {
                 content: reader.result,
                 sender: role, // Add sender information
             };
-            socket.emit('file-upload', { roomId, fileData });
+            // Use the current chat ID when uploading files
+            socket.emit('file-upload', { roomId: currentChatId, fileData });
         };
         reader.readAsDataURL(file);
     };
 
     const handleJoinQueue = (userInfo) => {
         console.log('Joining queue with info:', userInfo);
+        
+        // Store user name for display in header
+        setUserName(userInfo.name || 'Anonymous');
         
         // Make sure we're passing all the information
         socket.emit('join-queue', {
@@ -183,26 +192,19 @@ const ChatWindow = () => {
 
     const handleEndChat = () => {
         socket.emit('end-chat', { 
-            chatId: roomId,
+            chatId: currentChatId, // Use the current chat ID
             endedBy: 'customer'
         });
         
         setChatStarted(false);
-        setMessages(prev => [
-            ...prev,
-            {
-                id: `system-${Date.now()}`,
-                text: 'You ended this chat',
-                isSystem: true,
-                timestamp: new Date().toLocaleTimeString()
-            }
-        ]);
+        setMessages([]);
+        setCurrentChatId('chat-room'); // Reset to default room
     };
 
     const handleStartVideoCall = () => {
         // Logic to start a video call
         socket.emit('video-call-request', {
-            chatId: roomId,
+            chatId: currentChatId,
             caller: userId
         });
     };
@@ -212,7 +214,7 @@ const ChatWindow = () => {
         setInVideoCall(true);
         socket.emit('video-call-accepted', { 
             caller: videoCallerId,
-            roomId
+            roomId: currentChatId
         });
     };
 
@@ -220,7 +222,7 @@ const ChatWindow = () => {
         setShowVideoCallPrompt(false);
         socket.emit('video-call-declined', {
             caller: videoCallerId,
-            roomId
+            roomId: currentChatId
         });
     };
 
@@ -264,31 +266,45 @@ const ChatWindow = () => {
     };
 
     return (
-        <div className="chat-window">
-            <header className="chat-header">
-                <span>Live Chat</span>
-                {chatStarted && (
-                    <div className="chat-actions">
-                        <VideoCallButton onClick={handleStartVideoCall} />
-                        <EndChatButton onEndChat={handleEndChat} />
-                    </div>
-                )}
-            </header>
-            
-            {renderContent()}
-            
-            {showVideoCallPrompt && (
-                <div className="video-call-prompt">
-                    <p>Incoming video call from support...</p>
-                    <div className="video-call-actions">
-                        <button onClick={handleAcceptVideoCall} className="accept-call-btn">
-                            Accept
-                        </button>
-                        <button onClick={handleDeclineVideoCall} className="decline-call-btn">
-                            Decline
-                        </button>
-                    </div>
-                </div>
+        <div className="chat-window" style={customStyles}>
+            {customLayout ? (
+                customLayout({ messages, inputValue, handleSendMessage })
+            ) : (
+                <>
+                    <header className="chat-header">
+                        {userName ? (
+                            <div className="user-header-info">
+                                <span className="user-name-display">{userName}</span>
+                                {chatStarted && <span className="connection-status">Connected</span>}
+                                {inQueue && <span className="queue-status">In Queue</span>}
+                            </div>
+                        ) : (
+                            <span>Live Chat</span>
+                        )}
+                        {chatStarted && (
+                            <div className="chat-actions">
+                                <VideoCallButton onClick={handleStartVideoCall} />
+                                <EndChatButton onEndChat={handleEndChat} />
+                            </div>
+                        )}
+                    </header>
+                    
+                    {renderContent()}
+                    
+                    {showVideoCallPrompt && (
+                        <div className="video-call-prompt">
+                            <p>Incoming video call from support...</p>
+                            <div className="video-call-actions">
+                                <button onClick={handleAcceptVideoCall} className="accept-call-btn">
+                                    Accept
+                                </button>
+                                <button onClick={handleDeclineVideoCall} className="decline-call-btn">
+                                    Decline
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

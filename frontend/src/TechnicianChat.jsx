@@ -16,6 +16,7 @@ const TechnicianChat = () => {
     const [activeChats, setActiveChats] = useState([]);
     const [currentChatId, setCurrentChatId] = useState(null);
     const [queue, setQueue] = useState({ tech: [], billing: [], general: [] });
+    const [messageStore, setMessageStore] = useState({});
     const roomId = 'chat-room'; // Shared room ID
     const role = 'technician'; // Role of this user
     const technicianId = `tech-${Date.now()}`;
@@ -27,27 +28,72 @@ const TechnicianChat = () => {
 
         // Listen for incoming messages
         socket.on('message', (msg) => {
-            setMessages((prev) => {
-                const exists = prev.some(m => 
+            setMessageStore(prev => {
+                const targetRoomId = msg.roomId || currentChatId || roomId;
+                const roomMessages = prev[targetRoomId] || [];
+                const exists = roomMessages.some(m => 
                     m.id === msg.id && m.timestamp === msg.timestamp
                 );
                 
                 if (!exists) {
-                    return [
-                        ...prev, 
+                    const updatedRoomMessages = [
+                        ...roomMessages,
                         {
                             ...msg,
                             isOwn: msg.sender === role
                         }
                     ];
+                    
+                    return {
+                        ...prev,
+                        [targetRoomId]: updatedRoomMessages
+                    };
                 }
+                
                 return prev;
             });
+            
+            if (msg.roomId === currentChatId || !msg.roomId) {
+                setMessages(prev => {
+                    const exists = prev.some(m => 
+                        m.id === msg.id && m.timestamp === msg.timestamp
+                    );
+                    
+                    if (!exists) {
+                        return [
+                            ...prev,
+                            {
+                                ...msg,
+                                isOwn: msg.sender === role
+                            }
+                        ];
+                    }
+                    return prev;
+                });
+            }
         });
 
         // Listen for file uploads
         socket.on('file-received', (fileData) => {
-            setMessages((prev) => [
+            const targetRoomId = currentChatId || roomId;
+            
+            setMessageStore(prev => {
+                const roomMessages = prev[targetRoomId] || [];
+                const newFileMessage = {
+                    id: `file-${Date.now()}`,
+                    text: `File received: ${fileData.name}`,
+                    isOwn: fileData.sender === role,
+                    timestamp: new Date().toLocaleTimeString(),
+                    file: fileData,
+                };
+                
+                return {
+                    ...prev,
+                    [targetRoomId]: [...roomMessages, newFileMessage]
+                };
+            });
+            
+            setMessages(prev => [
                 ...prev,
                 {
                     id: `file-${Date.now()}`,
@@ -70,28 +116,9 @@ const TechnicianChat = () => {
 
         // Listen for chat accepted events
         socket.on('chat-accepted', ({ chatRoomId, user }) => {
-            console.log('Chat accepted with user:', user);
-            socket.emit('join-room', chatRoomId);
-            
-            // Add the new chat to active chats
-            setActiveChats(prev => [...prev, {
-                chatId: chatRoomId,
-                userName: user?.name || 'Anonymous',
-                category: user?.category || 'general',
-                startTime: new Date(),
-                unreadCount: 0,
-                userDetails: user // Store all user details for reference
-            }]);
-            
-            setCurrentChatId(chatRoomId);
-            
-            // Add system message about the new chat
-            setMessages([{
-                id: `system-${Date.now()}`,
-                text: `Chat started with ${user?.name || 'Anonymous'} (${user?.category || 'general'})`,
-                isSystem: true,
-                timestamp: new Date().toLocaleTimeString()
-            }]);
+            setCurrentChatId(chatRoomId); // Update to the dedicated room
+            socket.emit('join-room', chatRoomId); // Join the dedicated room
+            setActiveChats((prev) => [...prev, { chatId: chatRoomId, userName: user.name }]);
         });
 
         // Listen for chat ended events
@@ -119,7 +146,7 @@ const TechnicianChat = () => {
             socket.off('chat-accepted');
             socket.off('chat-ended');
         };
-    }, [currentChatId]);
+    }, []);
 
     const handleSendMessage = () => {
         if (!inputValue.trim()) return;
@@ -153,29 +180,10 @@ const TechnicianChat = () => {
 
     const handleSelectChat = (chatId, userId, category) => {
         if (chatId) {
-            // Switch to existing chat
             setCurrentChatId(chatId);
-            
-            // Update messages to show the selected chat history
-            const selectedChat = activeChats.find(chat => chat.chatId === chatId);
-            if (selectedChat) {
-                // You would typically load chat history from server here
-                // For now, just show a system message
-                setMessages([{
-                    id: `system-${Date.now()}`,
-                    text: `Showing chat with ${selectedChat.userName}`,
-                    isSystem: true,
-                    timestamp: new Date().toLocaleTimeString()
-                }]);
-            }
+            setMessages(messageStore[chatId] || []);
         } else if (userId && category) {
-            console.log(`Accepting chat from user ${userId} in category ${category}`);
-            // Accept a new chat from queue
-            socket.emit('accept-chat', { 
-                technicianId, 
-                userId,
-                category
-            });
+            socket.emit('accept-chat', { technicianId, userId, category });
         }
     };
 

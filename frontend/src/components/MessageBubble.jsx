@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../styles/MessageBubble.css';
 
 const MessageBubble = ({ message, isOwnMessage }) => {
     const [showFullImage, setShowFullImage] = useState(false);

@@ -3,7 +3,7 @@ import './App.css';
 
 // Import LiveChat components
 import { LiveChat, LiveChatProvider } from '../../frontend/src/livechat';
-import '../../frontend/src/livechat/styles/livechat.css';
+import '../../frontend/src/styles/livechat.css';
 
 // Custom theme
 const myTheme = {

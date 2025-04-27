@@ -1,0 +1,16 @@
+.chat-history {
+    display: flex;
+    flex-direction: column;
+    height: 400px; /* Increased from 300px */
+    overflow-y: auto;
+    padding: 15px; /* Increased from 10px */
+    border-bottom: 1px solid #ddd;
+    background-color: #f9f9f9;
+}
+
+.typing-indicator {
+    font-style: italic;
+    color: #666;
+    text-align: left;
+    margin-top: 5px;
+}

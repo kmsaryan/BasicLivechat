@@ -1,41 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import '../styles/SuggestionsSection.css';
+
+// Move these static objects outside the component to prevent unnecessary re-renders
+const suggestionKeywords = {
+    payment: ['payment', 'bill', 'invoice', 'pay', 'charge', 'subscription', 'cost'],
+    technical: ['error', 'broken', "doesn't work", 'bug', 'issue', 'problem', 'crash', 'not working'],
+    shipping: ['delivery', 'ship', 'package', 'track', 'order', 'arrive', 'shipping']
+};
+
+// Response templates mapped to categories
+const responseTemplates = {
+    payment: [
+        "I can help you with your payment concern. Could you provide the invoice number?",
+        "Would you like to review your payment history?",
+        "Our payment methods include credit card, PayPal, and bank transfer."
+    ],
+    technical: [
+        "Have you tried restarting the application?",
+        "What browser/device are you currently using?",
+        "Let me guide you through troubleshooting this issue step by step."
+    ],
+    shipping: [
+        "To track your package, I'll need your order number.",
+        "Standard shipping typically takes 3-5 business days.",
+        "Would you like me to check the status of your delivery?"
+    ],
+    general: [
+        "How else can I assist you today?",
+        "Would you like me to connect you with a specialist?",
+        "Is there anything else you'd like to know?"
+    ]
+};
 
 const SuggestionsSection = ({ messageHistory = [], onSuggestionClick }) => {
     const [suggestions, setSuggestions] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Keywords to match for different suggestion categories
-    const suggestionKeywords = {
-        payment: ['payment', 'bill', 'invoice', 'pay', 'charge', 'subscription', 'cost'],
-        technical: ['error', 'broken', 'doesn\'t work', 'bug', 'issue', 'problem', 'crash', 'not working'],
-        shipping: ['delivery', 'ship', 'package', 'track', 'order', 'arrive', 'shipping']
-    };
-
-    // Response templates mapped to categories
-    const responseTemplates = {
-        payment: [
-            "I can help you with your payment concern. Could you provide the invoice number?",
-            "Would you like to review your payment history?",
-            "Our payment methods include credit card, PayPal, and bank transfer."
-        ],
-        technical: [
-            "Have you tried restarting the application?",
-            "What browser/device are you currently using?",
-            "Let me guide you through troubleshooting this issue step by step."
-        ],
-        shipping: [
-            "To track your package, I'll need your order number.",
-            "Standard shipping typically takes 3-5 business days.",
-            "Would you like me to check the status of your delivery?"
-        ],
-        general: [
-            "How else can I assist you today?",
-            "Would you like me to connect you with a specialist?",
-            "Is there anything else you'd like to know?"
-        ]
-    };
-
-    useEffect(() => {
+    // Use useCallback to prevent this function from being recreated on every render
+    const analyzeSuggestions = useCallback(() => {
         // Only analyze when we have messages
         if (messageHistory.length === 0) {
             setSuggestions(responseTemplates.general);
@@ -55,7 +57,7 @@ const SuggestionsSection = ({ messageHistory = [], onSuggestionClick }) => {
         
         // Simulating some processing time for suggestion generation
         setTimeout(() => {
-            const text = lastUserMessage.text.toLowerCase();
+            const text = lastUserMessage.text?.toLowerCase() || '';
             let matched = false;
             
             // Check for keyword matches
@@ -74,8 +76,11 @@ const SuggestionsSection = ({ messageHistory = [], onSuggestionClick }) => {
             
             setIsLoading(false);
         }, 300);
-        
     }, [messageHistory]);
+
+    useEffect(() => {
+        analyzeSuggestions();
+    }, [analyzeSuggestions]);
 
     if (!onSuggestionClick) {
         return null; // Don't show suggestions if they're not clickable

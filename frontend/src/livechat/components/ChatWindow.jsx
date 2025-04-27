@@ -115,7 +115,6 @@ const ChatWindow = ({
                 <SendButton onClick={handleSendMessage} />
                 <input type="file" onChange={handleFileUpload} />
             </div>
-            <SuggestionsSection />
         </div>
     );
 };

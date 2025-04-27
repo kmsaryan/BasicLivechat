@@ -1,0 +1,41 @@
+.user-details-panel {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.user-details-panel h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #495057;
+}
+
+.user-details-content {
+    font-size: 14px;
+}
+
+.user-details-content p {
+    margin: 5px 0;
+}
+
+.user-issue {
+    margin-top: 10px;
+}
+
+.issue-text {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    margin-top: 5px;
+    white-space: pre-wrap;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 10px;
+}

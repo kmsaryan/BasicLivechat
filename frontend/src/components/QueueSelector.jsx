@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../styles/QueueSelector.css';
 
 // Remove the dependency on LiveChatContext to avoid the error
 const QueueSelector = ({ onSubmit, supportCategories = [] }) => {

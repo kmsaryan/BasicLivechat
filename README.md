@@ -368,6 +368,55 @@ git commit -m "Update Live Chat submodule"
 
 ---
 
+## Using Live Chat as a Submodule
+
+You can integrate the Live Chat system into your main project as a Git submodule.
+
+### Steps to Add as a Submodule
+
+1. Navigate to your project's root directory:
+   ```bash
+   cd your-project-root
+   ```
+
+2. Add the Live Chat repository as a submodule:
+   ```bash
+   git submodule add https://github.com/username/Livechattril.git libs/livechat
+   git commit -m "Add Live Chat as a submodule"
+   ```
+
+3. Initialize and update the submodule:
+   ```bash
+   git submodule update --init --recursive
+   ```
+
+4. Install dependencies:
+   ```bash
+   cd libs/livechat
+   npm install
+   cd frontend
+   npm install
+   ```
+
+### Importing Components
+
+You can import components directly from the submodule:
+
+```jsx
+import { LiveChat, LiveChatProvider } from './libs/livechat/frontend/src/livechat';
+import './libs/livechat/frontend/src/livechat/styles/livechat.css';
+
+function App() {
+  return (
+    <LiveChatProvider>
+      <LiveChat serverUrl="http://localhost:5000" />
+    </LiveChatProvider>
+  );
+}
+```
+
+---
+
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
