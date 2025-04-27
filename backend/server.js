@@ -186,17 +186,16 @@ io.on('connection', (socket) => {
 
     // Handle file uploads
     socket.on('file-upload', ({ roomId, fileData }) => {
-        // Ensure the sender is correctly set
         const sender = users[socket.id] || fileData.sender;
         const fileDataWithSender = {
             ...fileData,
-            sender, // Make sure sender is included
-            roomId  // Include the room ID with the file data
+            sender,
+            roomId,
         };
-        
+
         console.log(`File uploaded in room ${roomId}:`, fileDataWithSender);
-        
-        // Broadcast the file to EVERYONE in the room INCLUDING the sender
+
+        // Broadcast the file to everyone in the room, including the sender
         io.to(roomId).emit('file-received', fileDataWithSender);
     });
 

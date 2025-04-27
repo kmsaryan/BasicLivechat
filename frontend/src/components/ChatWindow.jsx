@@ -155,8 +155,19 @@ const ChatWindow = ({ customStyles = {}, customLayout = null }) => {
                 sender: role,
             };
             
-            // No need to manually add to messages since the server will echo it back
-            // with the correct structure via the 'file-received' event
+            // Add the file to the sender's local messages immediately
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: `file-${Date.now()}`,
+                    text: `File: ${file.name}`,
+                    isOwn: true,
+                    timestamp: new Date().toLocaleTimeString(),
+                    file: fileData,
+                },
+            ]);
+            
+            // Emit the file upload event to the server
             socket.emit('file-upload', { roomId: currentChatId, fileData });
         };
         reader.readAsDataURL(file);
