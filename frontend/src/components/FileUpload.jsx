@@ -3,9 +3,12 @@ import '../styles/FileUpload.css';
 
 const FileUpload = ({ onFileUpload, accept = "*" }) => {
   const handleFileChange = (event) => {
-    const file = event.target.files[0];
+    const file = event.target.files && event.target.files[0]; // Ensure file exists
     if (file && onFileUpload) {
+      // Pass the actual file object to the parent component
       onFileUpload(file);
+    } else {
+      console.warn("No file selected or invalid file input.");
     }
   };
 

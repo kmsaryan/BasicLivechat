@@ -80,34 +80,49 @@ const TechnicianChat = () => {
 
         // Listen for file uploads
         socket.on('file-received', (fileData) => {
-            const targetRoomId = currentChatId || roomId;
+            console.log("File received:", fileData.name, fileData.type);
+            const targetRoomId = fileData.roomId || currentChatId || roomId;
             
+            // Store in message store for any room
             setMessageStore(prev => {
                 const roomMessages = prev[targetRoomId] || [];
-                const newFileMessage = {
-                    id: `file-${Date.now()}`,
-                    text: `File received: ${fileData.name}`,
-                    isOwn: fileData.sender === role,
-                    timestamp: new Date().toLocaleTimeString(),
-                    file: fileData,
-                };
-                
-                return {
-                    ...prev,
-                    [targetRoomId]: [...roomMessages, newFileMessage]
-                };
+                // Check if this file is already in the messages (prevents duplicates)
+                if (!roomMessages.some(m => m.id === fileData.id)) {
+                    const newFileMessage = {
+                        id: fileData.id || `file-${Date.now()}`,
+                        text: `File received: ${fileData.name}`,
+                        isOwn: fileData.sender === role,
+                        timestamp: new Date().toLocaleTimeString(),
+                        file: fileData,
+                    };
+                    
+                    return {
+                        ...prev,
+                        [targetRoomId]: [...roomMessages, newFileMessage],
+                    };
+                }
+                return prev;
             });
             
-            setMessages(prev => [
-                ...prev,
-                {
-                    id: `file-${Date.now()}`,
-                    text: `File received: ${fileData.name}`,
-                    isOwn: fileData.sender === role,
-                    timestamp: new Date().toLocaleTimeString(),
-                    file: fileData,
-                },
-            ]);
+            // Only add to current view if it's for the current chat
+            if (fileData.roomId === currentChatId) {
+                setMessages(prev => {
+                    // Check if this file is already in the messages (prevents duplicates)
+                    if (!prev.some(m => m.id === fileData.id)) {
+                        return [
+                            ...prev,
+                            {
+                                id: fileData.id || `file-${Date.now()}`,
+                                text: `File received: ${fileData.name}`,
+                                isOwn: fileData.sender === role,
+                                timestamp: new Date().toLocaleTimeString(),
+                                file: fileData,
+                            },
+                        ];
+                    }
+                    return prev;
+                });
+            }
         });
 
         // Listen for queue updates
@@ -204,6 +219,9 @@ const TechnicianChat = () => {
             };
             socket.emit('file-upload', { roomId: currentChatId || roomId, fileData });
         };
+        reader.onerror = () => {
+            console.error("Error reading file:", file.name);
+        };
         reader.readAsDataURL(file);
     };
 
@@ -214,7 +232,7 @@ const TechnicianChat = () => {
         } else if (userId && category) {
             socket.emit('accept-chat', { technicianId, userId, category });
         }
-    };
+    }; // Fixed missing semicolon here
 
     const handleEndChat = () => {
         if (currentChatId) {

@@ -61,18 +61,25 @@ const ChatWindow = ({ customStyles = {}, customLayout = null }) => {
             });
         });
 
-        // Listen for file uploads
+        // Ensure files are correctly associated with the chat room
         socket.on('file-received', (fileData) => {
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: `file-${Date.now()}`,
-                    text: `File received: ${fileData.name}`,
-                    isOwn: fileData.sender === role,
-                    timestamp: new Date().toLocaleTimeString(),
-                    file: fileData,
-                },
-            ]);
+            if (fileData.roomId === currentChatId) {
+                setMessages((prev) => {
+                    if (!prev.some(m => m.id === fileData.id)) {
+                        return [
+                            ...prev,
+                            {
+                                id: fileData.id,
+                                text: `File: ${fileData.name}`,
+                                isOwn: fileData.sender === role,
+                                timestamp: new Date().toLocaleTimeString(),
+                                file: fileData,
+                            },
+                        ];
+                    }
+                    return prev;
+                });
+            }
         });
 
         // Listen for queue position updates
@@ -146,7 +153,7 @@ const ChatWindow = ({ customStyles = {}, customLayout = null }) => {
             socket.off('start-call');
             socket.off('call-ended');
         };
-    }, [currentChatId]);
+    }, [currentChatId, messages]);
 
     const handleSendMessage = () => {
         if (!inputValue.trim()) return;
@@ -164,8 +171,11 @@ const ChatWindow = ({ customStyles = {}, customLayout = null }) => {
     };
 
     const handleFileUpload = (file) => {
-        if (!file) return;
-        
+        if (!file) {
+            console.error("Invalid file object received");
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = () => {
             const fileData = {
@@ -173,22 +183,14 @@ const ChatWindow = ({ customStyles = {}, customLayout = null }) => {
                 type: file.type,
                 content: reader.result,
                 sender: role,
+                id: `file-${Date.now()}`, // Ensure unique ID
             };
-            
-            // Add the file to the sender's local messages immediately
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: `file-${Date.now()}`,
-                    text: `File: ${file.name}`,
-                    isOwn: true,
-                    timestamp: new Date().toLocaleTimeString(),
-                    file: fileData,
-                },
-            ]);
-            
+
             // Emit the file upload event to the server
             socket.emit('file-upload', { roomId: currentChatId, fileData });
+        };
+        reader.onerror = () => {
+            console.error("Error reading file:", file.name);
         };
         reader.readAsDataURL(file);
     };

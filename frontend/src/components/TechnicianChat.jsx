@@ -80,34 +80,45 @@ const TechnicianChat = () => {
 
         // Listen for file uploads
         socket.on('file-received', (fileData) => {
-            const targetRoomId = currentChatId || roomId;
-            
-            setMessageStore(prev => {
+            const targetRoomId = fileData.roomId || currentChatId || roomId;
+
+            setMessageStore((prev) => {
                 const roomMessages = prev[targetRoomId] || [];
-                const newFileMessage = {
-                    id: `file-${Date.now()}`,
-                    text: `File received: ${fileData.name}`,
-                    isOwn: fileData.sender === role,
-                    timestamp: new Date().toLocaleTimeString(),
-                    file: fileData,
-                };
-                
-                return {
-                    ...prev,
-                    [targetRoomId]: [...roomMessages, newFileMessage]
-                };
+                if (!roomMessages.some((m) => m.id === fileData.id)) {
+                    const newFileMessage = {
+                        id: fileData.id || `file-${Date.now()}`,
+                        text: `File received: ${fileData.name}`,
+                        isOwn: fileData.sender === role,
+                        timestamp: new Date().toLocaleTimeString(),
+                        file: fileData,
+                    };
+
+                    return {
+                        ...prev,
+                        [targetRoomId]: [...roomMessages, newFileMessage],
+                    };
+                }
+                return prev;
             });
-            
-            setMessages(prev => [
-                ...prev,
-                {
-                    id: `file-${Date.now()}`,
-                    text: `File received: ${fileData.name}`,
-                    isOwn: fileData.sender === role,
-                    timestamp: new Date().toLocaleTimeString(),
-                    file: fileData,
-                },
-            ]);
+
+            // Only add to the current view if it's for the current chat
+            if (fileData.roomId === currentChatId) {
+                setMessages((prev) => {
+                    if (!prev.some((m) => m.id === fileData.id)) {
+                        return [
+                            ...prev,
+                            {
+                                id: fileData.id || `file-${Date.now()}`,
+                                text: `File received: ${fileData.name}`,
+                                isOwn: fileData.sender === role,
+                                timestamp: new Date().toLocaleTimeString(),
+                                file: fileData,
+                            },
+                        ];
+                    }
+                    return prev;
+                });
+            }
         });
 
         // Listen for queue updates
@@ -175,6 +186,12 @@ const TechnicianChat = () => {
         };
     }, []);
 
+    useEffect(() => {
+        if (currentChatId) {
+            setMessages(messageStore[currentChatId] || []);
+        }
+    }, [currentChatId, messageStore]);
+
     const handleSendMessage = () => {
         if (!inputValue.trim()) return;
         
@@ -207,9 +224,34 @@ const TechnicianChat = () => {
 
     const handleSelectChat = (chatId, userId, category) => {
         if (chatId) {
-            setCurrentChatId(chatId);
-            setMessages(messageStore[chatId] || []);
+            // Fetch chat history (messages and files) from the backend
+            fetch(`/chat/history/${chatId}`)
+                .then((response) => response.json())
+                .then(({ messages, files }) => {
+                    // Combine messages and files into a single array
+                    const combinedHistory = [
+                        ...messages.map((msg) => ({
+                            ...msg,
+                            isOwn: msg.sender === role,
+                        })),
+                        ...files.map((file) => ({
+                            id: file.id,
+                            text: `File: ${file.filename}`,
+                            isOwn: file.sender === role,
+                            timestamp: file.timestamp,
+                            file,
+                        })),
+                    ];
+
+                    // Sort by timestamp
+                    combinedHistory.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+                    setMessages(combinedHistory);
+                    setCurrentChatId(chatId);
+                })
+                .catch((err) => console.error('Error fetching chat history:', err));
         } else if (userId && category) {
+            // Accept a new chat and create a room
             socket.emit('accept-chat', { technicianId, userId, category });
         }
     };

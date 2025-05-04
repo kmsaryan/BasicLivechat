@@ -4,10 +4,23 @@ import '../styles/MessageBubble.css';
 const MessageBubble = ({ message, isOwnMessage }) => {
     const [showFullImage, setShowFullImage] = useState(false);
 
-    // Improved image detection for both sender and receiver
     const isImage = message.file && (
-        (message.file.type && message.file.type.startsWith('image/')) || 
+        message.file.type.startsWith('image/') || 
         (message.file.content && message.file.content.startsWith('data:image/'))
+    );
+
+    const isPDF = message.file && (
+        message.file.type === 'application/pdf' || 
+        (message.file.content && message.file.content.startsWith('data:application/pdf'))
+    );
+
+    const isDoc = message.file && (
+        message.file.type.includes('word') || 
+        message.file.type.includes('doc') ||
+        (message.file.name && (
+            message.file.name.toLowerCase().endsWith('.doc') || 
+            message.file.name.toLowerCase().endsWith('.docx')
+        ))
     );
 
     const handleImageClick = () => {
@@ -49,10 +62,36 @@ const MessageBubble = ({ message, isOwnMessage }) => {
                                 </div>
                             )}
                         </div>
+                    ) : isPDF ? (
+                        <div className="file-message pdf-file">
+                            <p>PDF: {message.file.name}</p>
+                            <a 
+                                href={message.file.content} 
+                                download={message.file.name}
+                                className="download-link"
+                            >
+                                Download PDF
+                            </a>
+                        </div>
+                    ) : isDoc ? (
+                        <div className="file-message doc-file">
+                            <p>Document: {message.file.name}</p>
+                            <a 
+                                href={message.file.content} 
+                                download={message.file.name}
+                                className="download-link"
+                            >
+                                Download Document
+                            </a>
+                        </div>
                     ) : (
-                        <div className="file-message">
+                        <div className="file-message generic-file">
                             <p>File: {message.file.name}</p>
-                            <a href={message.file.content} download={message.file.name} className="download-link">
+                            <a 
+                                href={message.file.content} 
+                                download={message.file.name}
+                                className="download-link"
+                            >
                                 Download
                             </a>
                         </div>

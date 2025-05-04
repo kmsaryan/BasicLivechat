@@ -23,4 +23,27 @@ router.post('/messages', (req, res) => {
     });
 });
 
+// Get chat history (messages and files) for a specific room
+router.get('/history/:roomId', (req, res) => {
+    const { roomId } = req.params;
+
+    // Fetch messages and files for the room
+    const queryMessages = 'SELECT * FROM messages WHERE roomId = ? ORDER BY timestamp ASC';
+    const queryFiles = 'SELECT * FROM files WHERE roomId = ? ORDER BY timestamp ASC';
+
+    db.all(queryMessages, [roomId], (err, messages) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+
+        db.all(queryFiles, [roomId], (err, files) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+
+            res.json({ messages, files });
+        });
+    });
+});
+
 module.exports = router;

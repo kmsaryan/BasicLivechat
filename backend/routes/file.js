@@ -29,4 +29,15 @@ router.get('/download/:id', (req, res) => {
     });
 });
 
+// Get files for a specific chat room
+router.get('/room/:roomId', (req, res) => {
+    const { roomId } = req.params;
+    db.all('SELECT * FROM files WHERE roomId = ?', [roomId], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
+    });
+});
+
 module.exports = router;

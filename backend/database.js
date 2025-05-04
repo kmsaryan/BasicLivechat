@@ -13,6 +13,8 @@ db.serialize(() => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         filename TEXT,
         filepath TEXT,
+        roomId TEXT,
+        sender TEXT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 });

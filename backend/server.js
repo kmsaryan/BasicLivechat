@@ -8,6 +8,7 @@ const cors = require('cors'); // Import cors middleware
 const chatRoutes = require('./routes/chat');
 const fileRoutes = require('./routes/file');
 const { router: adminRouter, setQueueReference } = require('./routes/admin');
+const db = require('./database'); // Ensure database is imported
 
 const app = express();
 const server = http.createServer(app);
@@ -191,11 +192,29 @@ io.on('connection', (socket) => {
             ...fileData,
             sender,
             roomId,
+            id: fileData.id || `file-${Date.now()}`, // Ensure unique ID
         };
 
-        console.log(`File uploaded in room ${roomId}:`, fileDataWithSender);
+        console.log(`File uploaded in room ${roomId}:`, {
+            name: fileDataWithSender.name,
+            type: fileDataWithSender.type,
+            sender: fileDataWithSender.sender,
+        });
 
-        // Broadcast the file to everyone in the room, including the sender
+        // Store file in the database
+        db.run(
+            'INSERT INTO files (filename, filepath, roomId, sender) VALUES (?, ?, ?, ?)',
+            [fileDataWithSender.name, fileDataWithSender.content, roomId, sender],
+            function (err) {
+                if (err) {
+                    console.error("Error storing file in database:", err.message);
+                    return;
+                }
+                console.log(`File stored in database with ID: ${this.lastID}`);
+            }
+        );
+
+        // Broadcast the file to everyone in the room
         io.to(roomId).emit('file-received', fileDataWithSender);
     });
 
